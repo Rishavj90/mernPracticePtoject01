@@ -1,7 +1,22 @@
 const express = require("express");
 const data = require('./MOCK_DATA.json');
 const fs = require('fs/promises');
+const mongodb = require('mongoose');
+
+
 const app=express();
+mongodb.connect('mongodb://127.0.0.1:27017/myApp')
+
+const mySchema = new mongodb.Schema({
+    first_name : {type : String, required:true},
+    last_name : {type : String},
+    email : {type : String, required : true, unique:true},
+    gender : {type: String},
+    ip_address : {type : String}
+})
+
+const usersDb = mongodb.model("userDb", mySchema);
+
 
 app.use(express.urlencoded({extended:false}));
 app.use(async (req, res, next)=>{
@@ -19,6 +34,11 @@ app.route('/api/users/:id')
         await fs.writeFile('./log.txt', JSON.stringify(req.headers, null, 2))
         res.setHeader("name","rishav")
         return res.json(user); 
+    })
+    .post(async (req, res)=>{
+        const body = req.body;
+        usersDb.insertOne(body);
+        return res.json({msg : "done"});
     })
     .put(async (req,res)=>{
         let num = Number(req.params.id);
